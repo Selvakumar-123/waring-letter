@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workplace Warning Letter Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* General Page Styling */
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .signature-container {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      margin-bottom: 5px;
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 200px;
+      background: #fff;
+      cursor: crosshair;
+      display: block;
+    }
+    .clear-btn {
+      background: #ff6666;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .clear-btn:hover {
+      background: #ff3333;
+    }
+    button.submit-btn {
+      width: 100%;
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.submit-btn:hover {
+      background: #45a049;
+    }
+    #success-message {
+      display: none;
+      text-align: center;
+      font-size: 20px;
+      color: green;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="form-container">
+    <h1>Workplace Warning Letter Form</h1>
+    <form id="warningForm">
+      <!-- Date and Time of Offence -->
+      <div class="form-group">
+        <label for="dateTimeOffence">Date and Time of Offence:</label>
+        <input type="datetime-local" id="dateTimeOffence" name="dateTimeOffence" required>
+      </div>
+      <!-- Location -->
+      <div class="form-group">
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required>
+      </div>
+      <!-- Employee Name -->
+      <div class="form-group">
+        <label for="employeeName">Employee Name:</label>
+        <input type="text" id="employeeName" name="employeeName" required>
+      </div>
+      <!-- Employee Company -->
+      <div class="form-group">
+        <label for="employeeCompany">Employee Company:</label>
+        <input type="text" id="employeeCompany" name="employeeCompany" required>
+      </div>
+      <!-- Fin. ID -->
+      <div class="form-group">
+        <label for="finId">Fin. ID:</label>
+        <input type="text" id="finId" name="finId" required>
+      </div>
+      <!-- Description of Work Activity -->
+      <div class="form-group">
+        <label for="workActivity">Description of Work Activity:</label>
+        <textarea id="workActivity" name="workActivity" rows="3" required></textarea>
+      </div>
+      <!-- Description of Offence -->
+      <div class="form-group">
+        <label for="offenceDesc">Description of Offence:</label>
+        <textarea id="offenceDesc" name="offenceDesc" rows="3" required></textarea>
+      </div>
+      <!-- Type of Action (Drop-down) -->
+      <div class="form-group">
+        <label for="actionType">Type of Action:</label>
+        <select id="actionType" name="actionType" required>
+          <option value="">Select Action</option>
+          <option value="verbal_warning">Verbal Warning</option>
+          <option value="written_warning">Written Warning</option>
+          <option value="suspension">Suspension</option>
+          <option value="termination">Termination</option>
+        </select>
+      </div>
+      <!-- Next Offence Will Be -->
+      <div class="form-group">
+        <label for="nextOffence">Next Offence Will Be:</label>
+        <input type="text" id="nextOffence" name="nextOffence" placeholder="Specify conditions or timeline" required>
+      </div>
+      <!-- Acknowledge by Sign (Signature Pad 1) -->
+      <div class="form-group">
+        <label>Acknowledge by Sign:</label>
+        <div class="signature-container">
+          <canvas id="ackSignature"></canvas>
+        </div>
+        <button type="button" class="clear-btn" id="clearAck">Clear Signature</button>
+      </div>
+      <!-- Report By -->
+      <div class="form-group">
+        <label for="reportBy">Report By:</label>
+        <input type="text" id="reportBy" name="reportBy" required>
+      </div>
+      <!-- Designation -->
+      <div class="form-group">
+        <label for="designation">Designation:</label>
+        <input type="text" id="designation" name="designation" required>
+      </div>
+      <!-- Sign (Signature Pad 2) -->
+      <div class="form-group">
+        <label>Sign:</label>
+        <div class="signature-container">
+          <canvas id="reporterSignature"></canvas>
+        </div>
+        <button type="button" class="clear-btn" id="clearReporter">Clear Signature</button>
+      </div>
+      <!-- Submit Button -->
+      <div class="form-group">
+        <button type="submit" class="submit-btn">Submit Warning Letter</button>
+      </div>
+    </form>
+  </div>
+  <div id="success-message">Successfully Submitted!</div>
+
+  <script>
+    // Utility function to set up a signature pad on a given canvas
+function setupSignaturePad(canvasId, clearBtnId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  let lastPos = { x: 0, y: 0 };
+
+  // Explicitly set canvas dimensions if needed
+  function resizeCanvas() {
+    // Use offsetWidth/offsetHeight OR set fixed dimensions as required
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function getMousePos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    drawing = true;
+    lastPos = getMousePos(e);
+  });
+  canvas.addEventListener('mousemove', function(e) {
+    if (!drawing) return;
+    const mousePos = getMousePos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPos.x, lastPos.y);
+    ctx.lineTo(mousePos.x, mousePos.y);
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    lastPos = mousePos;
+  });
+  canvas.addEventListener('mouseup', function() { drawing = false; });
+  canvas.addEventListener('mouseleave', function() { drawing = false; });
+
+  // Touch events for mobile devices
+  canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent("mousedown", {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      canvas.dispatchEvent(mouseEvent);
+    }
+  });
+  canvas.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent("mousemove", {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      canvas.dispatchEvent(mouseEvent);
+    }
+  });
+  canvas.addEventListener("touchend", function (e) {
+    e.preventDefault();
+    const mouseEvent = new MouseEvent("mouseup", {});
+    canvas.dispatchEvent(mouseEvent);
+  });
+
+  document.getElementById(clearBtnId).addEventListener('click', function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+  
+  return canvas;
+}
+
+
+    // Initialize both signature pads
+    const ackCanvas = setupSignaturePad("ackSignature", "clearAck");
+    const reporterCanvas = setupSignaturePad("reporterSignature", "clearReporter");
+
+    // Form submission handler
+    // Form submission handler
+document.getElementById('warningForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  // Get signatures as Data URLs (using explicit image type)
+  const ackSignatureData = ackCanvas.toDataURL("image/png");
+  const reporterSignatureData = reporterCanvas.toDataURL("image/png");
+
+  // Debug: log the data URLs (or check in the browser console)
+  console.log("Acknowledge Signature Data URL:", ackSignatureData);
+  console.log("Reporter Signature Data URL:", reporterSignatureData);
+
+  // Check if the data URLs are not blank (a blank canvas usually returns a fixed minimal PNG)
+  if (ackSignatureData === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+P///38ACfsD/Uz12sIAAAAASUVORK5CYII=" ||
+      reporterSignatureData === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+P///38ACfsD/Uz12sIAAAAASUVORK5CYII=") {
+    alert("One or both signature fields appear to be empty!");
+    return;
+  }
+
+  // Create a FormData object from the form elements and append signatures
+  const formData = new FormData(this);
+  formData.append('ackSignature', ackSignatureData);
+  formData.append('reporterSignature', reporterSignatureData);
+
+  // Send the form data to the Google Apps Script web app
+  fetch('https://script.google.com/macros/s/AKfycbwejILHlZIrSOo0KGgIayqAe4p7HL-cf3A0swdWbfyggli9DJXK7JQEp8N6F-eJtS9QXw/exec', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.text())
+  .then(result => {
+    document.getElementById('form-container').style.display = 'none';
+    document.getElementById('success-message').style.display = 'block';
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Submission error. Please try again.');
+  });
+});
+
+  </script>
+  <script src="script.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
